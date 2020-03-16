@@ -1,0 +1,1 @@
+Just extract https://github.com/oblitum/Interception/releases/download/v1.0.1/Interception.zip archive here.

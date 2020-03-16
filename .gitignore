@@ -1,0 +1,8 @@
+﻿.vs
+bin
+obj
+packages
+/Interception/command line installer
+/Interception/library
+/Interception/licenses
+/Interception/samples

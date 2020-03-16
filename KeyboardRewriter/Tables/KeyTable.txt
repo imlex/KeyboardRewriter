@@ -1,0 +1,71 @@
+﻿Escape	false	01
+F1	false	3B
+F2	false	3C
+F3	false	3D
+F4	false	3E
+F5	false	3F
+F6	false	40
+F7	false	41
+F8	false	42
+F9	false	43
+F10	false	44
+F11	false	D9
+F12	false	DA
+
+Backspace	false	0E
+Tab	false	0F
+Enter	false	1C
+
+Left Alt	false	38 note 1
+Left Ctrl	false	1D note 1
+Left Shift	false	2A note 1
+
+Caps Lock	false	3A note 1
+Delete	false	E0,53
+Delete	true	53
+Dn Arrow	true	50
+End	false	E0,4F
+End	true	4F
+Home	false	E0,47
+Home	true	47
+Insert	false	E0,52
+Insert	true	52
+Keypad -	false	4A
+Keypad -	true	4A
+Keypad *	false	E0,37
+Keypad *	true	E0,37
+Keypad .	false	53
+Keypad /	false	E0,35
+Keypad /	true	E0,35
+Keypad +	false	4E
+Keypad +	true	4E
+Keypad 0	false	52
+Keypad 1	false	4F
+Keypad 2	false	50
+Keypad 3	false	51
+Keypad 4	false	4B
+Keypad 5	false	4C
+Keypad 6	false	4D
+Keypad 7	false	47
+Keypad 8	false	48
+Keypad 9	false	49
+Keypad Enter	false	E0,1C
+Keypad Enter	true	E0,1C
+Left Arrow	false	E0,4B
+Left Arrow	true	4B
+Num Lock	false	45,C5 note 1
+Pg Dn	false	E0,51
+Pg Dn	true	51
+Pg Up	false	E0,49
+Pg Up	true	49
+Prnt, Scrn	false	2A,37
+Right Alt	false	E0,38 note 1
+Right Arrow	false	E0,4D
+Right Arrow	true	4D
+Right Ctrl	false	E0,1D note 1
+Right shift	false	36 note 1
+Scroll Lock	false	46
+Spacebar	false	39
+Spacebar	true	39
+Up Arrow	false	E0,48
+Up Arrow	true	48
