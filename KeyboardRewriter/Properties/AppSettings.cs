@@ -6,7 +6,16 @@ namespace KeyboardRewriter.Properties
     {
         public List<string> HardwareIds { get; set; }
 
+        public SequenceStartRuleSetting SequenceStartRule { get; set; }
+
         public List<RewriteRuleSetting> RewriteRules { get; set; }
+    }
+
+    public class SequenceStartRuleSetting
+    {
+        public int TimeoutMilliseconds { get; set; }
+
+        public string SendKeys { get; set; }
     }
 
     public class RewriteRuleSetting

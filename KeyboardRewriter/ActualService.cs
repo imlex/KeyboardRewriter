@@ -14,6 +14,7 @@ namespace KeyboardRewriter
     {
         private static readonly Logger __logger = LogManager.GetCurrentClassLogger();
 
+        private SequenceStartRule _sequenceStartRule;
         private List<RewriteRule> _rewriteRules;
 
         private Context _context;
@@ -28,6 +29,8 @@ namespace KeyboardRewriter
             using (var fileStream = File.Open(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json"), FileMode.Open))
                 appSettings = (AppSettings) new DataContractJsonSerializer(typeof(AppSettings)).ReadObject(fileStream);
 
+            if (appSettings.SequenceStartRule != null)
+                _sequenceStartRule = new SequenceStartRule(appSettings.SequenceStartRule.TimeoutMilliseconds, appSettings.SequenceStartRule.SendKeys);
             _rewriteRules = appSettings.RewriteRules.Select(x => new RewriteRule(x.ReceiveKeys, x.SendKeys)).ToList();
 
             _context = Context.Create();
@@ -55,7 +58,8 @@ namespace KeyboardRewriter
 
         private void RewriteKeyboard()
         {
-            KeyStroke[] keyStrokes = new KeyStroke[1];
+            var keyStrokes = new KeyStroke[1];
+            var lastReceiveTimeTicks = DateTime.Now.Ticks;
 
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
@@ -69,6 +73,13 @@ namespace KeyboardRewriter
                 var keyStroke = keyStrokes[0];
 
                 __logger.Debug("Received code={0}, state={1}", keyStroke.Code, keyStroke.State);
+
+
+                if (_sequenceStartRule != null && _sequenceStartRule.TimeoutTicks < DateTime.Now.Ticks - lastReceiveTimeTicks)
+                    SendKeyStrokes(deviceIdentifier, _sequenceStartRule.SendKeyStrokes);
+
+                lastReceiveTimeTicks = DateTime.Now.Ticks;
+
 
                 var fitKeyStrokes = 0;
                 RewriteRule fitRewriteRule = null;
@@ -103,42 +114,52 @@ namespace KeyboardRewriter
                 unfitKeyStrokes -= fitKeyStrokes - 1;
 
                 if (unfitRewriteRule != null && unfitKeyStrokes > 0)
-                {
-                    if (__logger.IsDebugEnabled)
-                    {
-                        for (int i = 0; i < unfitKeyStrokes; i++)
-                        {
-                            var sendingKeyStroke = unfitRewriteRule.ReceiveKeyStrokes[i];
-                            __logger.Debug("Sending code={0}, state={1}", sendingKeyStroke.Code, sendingKeyStroke.State);
-                        }
-                    }
-
-                    _context.Send(deviceIdentifier, unfitRewriteRule.ReceiveKeyStrokes, unfitKeyStrokes);
-                }
+                    SendKeyStrokes(deviceIdentifier, unfitRewriteRule.ReceiveKeyStrokes, unfitKeyStrokes);
 
                 if (fitKeyStrokes == 0)
-                {
-                    __logger.Debug("Sending code={0}, state={1}", keyStroke.Code, keyStroke.State);
-
-                    _context.Send(deviceIdentifier, keyStrokes, 1);
-                }
+                    SendKeyStrokes(deviceIdentifier, keyStrokes);
                 else if (fitRewriteRule != null)
                 {
-                    if (__logger.IsDebugEnabled)
-                    {
-                        for (int i = 0; i < fitRewriteRule.SendKeyStrokes.Length; i++)
-                        {
-                            var sendingKeyStroke = fitRewriteRule.SendKeyStrokes[i];
-                            __logger.Debug("Sending code={0}, state={1}", sendingKeyStroke.Code, sendingKeyStroke.State);
-                        }
-                    }
-
-                    _context.Send(deviceIdentifier, fitRewriteRule.SendKeyStrokes);
+                    SendKeyStrokes(deviceIdentifier, fitRewriteRule.SendKeyStrokes);
 
                     foreach (var rewriteRule in _rewriteRules)
                         rewriteRule.ReceivePosition = 0;
                 }
             }
+        }
+
+        private void SendKeyStrokes(DeviceIdentifier deviceIdentifier, List<KeyStroke[]> keyStrokes)
+        {
+            foreach (var keyStrokesPart in keyStrokes)
+            {
+                if (keyStrokesPart.Length == 1 && keyStrokesPart[0].Code == KeyStroke.SleepCode)
+                {
+                    var time = keyStrokesPart[0].Information;
+                    __logger.Debug("Sleep for " + time + " milliseconds");
+                    Thread.Sleep((int) time);
+                }
+                else
+                    SendKeyStrokes(deviceIdentifier, keyStrokesPart);
+            }
+        }
+
+        private void SendKeyStrokes(DeviceIdentifier deviceIdentifier, KeyStroke[] keyStrokes)
+        {
+            SendKeyStrokes(deviceIdentifier, keyStrokes, keyStrokes.Length);
+        }
+
+        private void SendKeyStrokes(DeviceIdentifier deviceIdentifier, KeyStroke[] keyStrokes, int keyStrokesCount)
+        {
+            if (__logger.IsDebugEnabled)
+            {
+                for (int i = 0; i < keyStrokesCount; i++)
+                {
+                    var keyStroke = keyStrokes[i];
+                    __logger.Debug("Sending code={0}, state={1}", keyStroke.Code, keyStroke.State);
+                }
+            }
+
+            _context.Send(deviceIdentifier, keyStrokes, keyStrokesCount);
         }
 
         public void Stop()

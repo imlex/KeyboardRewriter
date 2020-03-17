@@ -54,6 +54,7 @@
     <None Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="BaseRule.cs" />
     <Compile Include="Interception\Context.cs" />
     <Compile Include="Interception\DeviceIdentifier.cs" />
     <Compile Include="Interception\Filter.cs" />
@@ -69,6 +70,7 @@
     <Content Include="Tables\KeyTable.txt" />
     <Content Include="Tables\Keys.txt" />
     <Content Include="Tables\AsciiTable.txt" />
+    <Compile Include="SequenceStartRule.cs" />
     <Compile Include="WindowsService.cs">
       <SubType>Component</SubType>
     </Compile>
