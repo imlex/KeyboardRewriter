@@ -7,7 +7,7 @@ namespace KeyboardRewriter
     {
         public static readonly ServiceInstaller ServiceInstaller = new ServiceInstaller
         {
-            DelayedAutoStart = true,
+            DelayedAutoStart = false,
             Description = "Intercepts and substitutes keyboard keystrokes.",
             DisplayName = "Keyboard Rewriter",
             ServiceName = "KeyboardRewriter",
@@ -19,7 +19,7 @@ namespace KeyboardRewriter
             ServiceInstaller,
             new ServiceProcessInstaller
             {
-                Account = ServiceAccount.LocalService,
+                Account = ServiceAccount.LocalSystem,
                 Password = null,
                 Username = null
             }
