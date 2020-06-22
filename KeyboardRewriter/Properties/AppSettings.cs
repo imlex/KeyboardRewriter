@@ -6,6 +6,8 @@ namespace KeyboardRewriter.Properties
     {
         public List<string> HardwareIds { get; set; }
 
+        public int KeyStrokeTimeMilliseconds { get; set; }
+
         public SequenceStartRuleSetting SequenceStartRule { get; set; }
 
         public List<RewriteRuleSetting> RewriteRules { get; set; }

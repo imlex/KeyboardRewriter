@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using KeyboardRewriter.Interception;
+﻿using KeyboardRewriter.Interception;
 
 namespace KeyboardRewriter
 {
@@ -15,6 +14,6 @@ namespace KeyboardRewriter
 
         public int ReceivePosition { get; set; }
 
-        public List<KeyStroke[]> SendKeyStrokes { get; }
+        public KeyStroke[] SendKeyStrokes { get; }
     }
 }

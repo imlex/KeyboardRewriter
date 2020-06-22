@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using KeyboardRewriter.Interception;
+﻿using KeyboardRewriter.Interception;
 
 namespace KeyboardRewriter
 {
@@ -14,6 +13,6 @@ namespace KeyboardRewriter
 
         public long TimeoutTicks { get; }
 
-        public List<KeyStroke[]> SendKeyStrokes { get; }
+        public KeyStroke[] SendKeyStrokes { get; }
     }
 }

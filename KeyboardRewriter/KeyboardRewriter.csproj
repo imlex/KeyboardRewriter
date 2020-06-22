@@ -51,9 +51,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActualService.cs" />
-    <None Include="appsettings.json">
+    <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Content Include="appsettings.old.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="BaseRule.cs" />
     <Compile Include="Interception\Context.cs" />
     <Compile Include="Interception\DeviceIdentifier.cs" />

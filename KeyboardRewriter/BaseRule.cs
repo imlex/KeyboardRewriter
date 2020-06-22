@@ -12,38 +12,12 @@ namespace KeyboardRewriter
             return GenerateKeyStrokes(keys, false).ToArray();
         }
 
-        protected static List<KeyStroke[]> GenerateSendKeyStrokes(string keys)
+        protected static KeyStroke[] GenerateSendKeyStrokes(string keys)
         {
-            var sendKeyStrokes = new List<KeyStroke[]>();
-
-            List<KeyStroke> keyStrokesPart = null;
-            foreach (var keyStroke in GenerateKeyStrokes(keys, true))
-            {
-                if (keyStroke.Code == KeyStroke.SleepCode)
-                {
-                    if (keyStrokesPart != null)
-                    {
-                        sendKeyStrokes.Add(keyStrokesPart.ToArray());
-                        keyStrokesPart = null;
-                    }
-
-                    sendKeyStrokes.Add(new[] {keyStroke});
-                }
-                else
-                {
-                    if (keyStrokesPart == null)
-                        keyStrokesPart = new List<KeyStroke>();
-                    keyStrokesPart.Add(keyStroke);
-                }
-            }
-
-            if (keyStrokesPart != null)
-                sendKeyStrokes.Add(keyStrokesPart.ToArray());
-
-            return sendKeyStrokes;
+            return GenerateKeyStrokes(keys, true).ToArray();
         }
 
-        private static IEnumerable<KeyStroke> GenerateKeyStrokes(string keys, bool allowSleep)
+        private static IEnumerable<KeyStroke> GenerateKeyStrokes(string keys, bool allowCommands)
         {
             var i = 0;
             while (i < keys.Length)
@@ -61,7 +35,7 @@ namespace KeyboardRewriter
                         if (j == -1)
                             throw new ArgumentException("Keys '" + keys + "' format is invalid.");
 
-                        foreach (var keyStroke in GenerateKeyStrokesForShortCut(keys.Substring(i, j - i), allowSleep))
+                        foreach (var keyStroke in GenerateKeyStrokesForShortCut(keys.Substring(i, j - i), allowCommands))
                             yield return keyStroke;
 
                         i = j + 1;
@@ -99,24 +73,60 @@ namespace KeyboardRewriter
 
         private static readonly char[] __shortCutSeparators = {' ', '+'};
 
-        private static IEnumerable<KeyStroke> GenerateKeyStrokesForShortCut(string shortCut, bool allowSleep)
+        private static IEnumerable<KeyStroke> GenerateKeyStrokesForShortCut(string shortCut, bool allowCommands)
         {
             var keys = shortCut.ToLower().Split(__shortCutSeparators, StringSplitOptions.RemoveEmptyEntries);
+            var keysLength = keys.Length;
+            var commandKeyStroke = default(KeyStroke?);
+            var repeatTimes = 1u;
 
-            if (keys.Length == 2 && keys[0] == "sleep")
+            if (keysLength >= 2)
             {
-                if (!allowSleep)
-                    throw new ArgumentException("Sleep is not allowed here.");
+                if (keys[keysLength - 2] == "sleep")
+                {
+                    keysLength -= 2;
 
-                if (!uint.TryParse(keys[1], out var time))
-                    throw new ArgumentException("Sleep time '" + keys[1] + "' is invalid.");
+                    if (!allowCommands)
+                        throw new ArgumentException("Sleep is not allowed here.");
 
-                return new[] {new KeyStroke {Code = KeyStroke.SleepCode, Information = time}};
+                    if (!uint.TryParse(keys[keysLength + 1], out var sleepTime))
+                        throw new ArgumentException("Sleep time '" + keys[keysLength + 1] + "' is invalid.");
+
+                    commandKeyStroke = KeyStroke.CreateSleepKeyStroke(sleepTime);
+                }
+                else if (keys[keysLength - 2] == "repeat")
+                {
+                    keysLength -= 2;
+
+                    if (!uint.TryParse(keys[keysLength + 1], out repeatTimes) || repeatTimes == 0)
+                        throw new ArgumentException("Repeat times '" + keys[keysLength + 1] + "' is invalid.");
+                }
+                else if (keys[0] == "forward")
+                {
+                    if (keysLength != 3)
+                        throw new ArgumentException("Invalid forward arguments '" + shortCut + "'.");
+
+                    keysLength -= 3;
+
+                    if (!allowCommands)
+                        throw new ArgumentException("Forward is not allowed here.");
+
+                    if (!uint.TryParse(keys[1], out var forwardIndex))
+                        throw new ArgumentException("Forward index '" + keys[1] + "' is invalid.");
+
+                    if (!uint.TryParse(keys[2], out var forwardLength) || forwardLength == 0)
+                        throw new ArgumentException("Forward length '" + keys[2] + "' is invalid.");
+
+                    commandKeyStroke = KeyStroke.CreateForwardKeyStroke(forwardIndex, 2 * forwardLength);
+                }
             }
 
-            var keyStrokes = new KeyStroke[2 * keys.Length];
+            var keyStrokes = new KeyStroke[2 * keysLength * repeatTimes + (commandKeyStroke.HasValue ? 1 : 0)];
+            var upIndex = 2 * keysLength - (commandKeyStroke.HasValue ? 0 : 1);
+            if (commandKeyStroke.HasValue)
+                keyStrokes[keysLength] = commandKeyStroke.Value;
 
-            for (int i = 0; i < keys.Length; i++)
+            for (int i = 0; i < keysLength; i++)
             {
                 var key = keys[i];
 
@@ -128,8 +138,11 @@ namespace KeyboardRewriter
 
                 keyStrokes[i] = new KeyStroke {Code = code, State = KeyState.Down};
 
-                keyStrokes[2 * keys.Length - i - 1] = new KeyStroke {Code = code, State = KeyState.Up};
+                keyStrokes[upIndex - i] = new KeyStroke {Code = code, State = KeyState.Up};
             }
+
+            for (int i = 1; i < repeatTimes; i++)
+                Array.Copy(keyStrokes, 0, keyStrokes, 2 * keysLength * i, 2 * keysLength);
 
             return keyStrokes;
         }
@@ -272,6 +285,10 @@ namespace KeyboardRewriter
                 case "alt": code = 0x38; break;
                 case "ctrl": code = 0x1D; break;
                 case "shift": code = 0x2A; break;
+
+                case "any": code = KeyStroke.AnyClassCode; break;
+                case "digit": code = KeyStroke.DigitClassCode; break;
+                case "letter": code = KeyStroke.LetterClassCode; break;
 // @formatter:on — enable formatter after this line
                 default:
                     throw new ArgumentException("Key '" + key + "' is not supported! Yet?");
